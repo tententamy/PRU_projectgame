@@ -13,15 +13,21 @@ public class Player : MonoBehaviour
     private int spriteIndex;
     public bool active;
     private bool isStopped = false;
-
+    private Animator animator;
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
     }
 
     private void Start()
     {
         InvokeRepeating(nameof(AnimateSprite), 0.11f, 0.11f);
+        animator = GetComponent<Animator>();
+    }
+    private void Update()
+    {
+        
     }
 
     private void AnimateSprite()
@@ -54,6 +60,18 @@ public class Player : MonoBehaviour
         if (other.gameObject.CompareTag("Enemies"))
         {
             GameManager.Instance.Question(this, other.GetComponent<Enemies>());
+        }
+    }
+
+    public void TriggerAttackAnimation()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger("Attack");
+        }
+        else
+        {
+            Debug.LogError("Animator is not assigned to the player.");
         }
     }
 }

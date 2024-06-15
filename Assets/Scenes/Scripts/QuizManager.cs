@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class QuizManager : MonoBehaviour
 {
     private static QuizManager _instance;
+    private static GameManager _gameManager;
 
     public static QuizManager Instance
     {
@@ -24,15 +26,17 @@ public class QuizManager : MonoBehaviour
             return _instance;
         }
     }
-
-    public GameObject questionPanel; // Panel hiển thị câu hỏi và đáp án
-    public TMP_Text questionText; // Text hiển thị câu hỏi
-    public Button answerButton1; // Button hiển thị đáp án 1
-    public Button answerButton2; // Button hiển thị đáp án 2
-    public TMP_Text scoreText; // Text hiển thị điểm số
+    public GameObject startPanel;
+    public GameObject questionPanel;
+    public TMP_Text questionText;
+    public Button answerButton1;
+    public Button answerButton2;
+    public TMP_Text scoreText;
     public GameObject losePanel;
     public TMP_Text loseText;
-
+    public Button restartButton;
+    public GameObject smokePrefab;
+    public TMP_Text scoreTextFinal;
     public List<QuizQuestion> questions; // Danh sách các câu hỏi
 
     private Player playerScript;
@@ -43,7 +47,7 @@ public class QuizManager : MonoBehaviour
     private void Start()
     {
         // Kiểm tra xem tất cả các thành phần UI đã được gán chưa
-        if (questionPanel == null || questionText == null || answerButton1 == null || answerButton2 == null || scoreText == null)
+        if (questionPanel == null || questionText == null || answerButton1 == null || answerButton2 == null || scoreText == null || restartButton == null)
         {
             Debug.LogError("Some UI components are not assigned in QuizManager.");
             return;
@@ -51,9 +55,12 @@ public class QuizManager : MonoBehaviour
         if (losePanel != null)
             losePanel.SetActive(false);
 
-        questionPanel.SetActive(false); // Ẩn panel câu hỏi khi bắt đầu
-        //scoreText.gameObject.SetActive(true);
-
+        questionPanel.SetActive(false);
+        restartButton.gameObject.SetActive(false);
+        restartButton.onClick.AddListener(RestartGame);
+        scoreText.gameObject.SetActive(false);
+        scoreTextFinal.gameObject.SetActive(false);
+        
         // Hiển thị điểm số ban đầu
         UpdateScore();
 
@@ -164,6 +171,7 @@ public class QuizManager : MonoBehaviour
 
     private void OnAnswerSelected(int index, int correctAnswerIndex)
     {
+        _gameManager = FindObjectOfType<GameManager>();
         Debug.Log("Answer selected: " + index);
 
         if (index == correctAnswerIndex)
@@ -171,18 +179,25 @@ public class QuizManager : MonoBehaviour
             Debug.Log("Correct answer!");
             score += 1;
             UpdateScore();
+            HideEnemy();
+            playerScript.TriggerAttackAnimation();
+            scoreText.gameObject.SetActive(true);
         }
         else
         {
-            Debug.Log("Wrong answer.");
-            ShowLoseMessage();
+            scoreTextFinal.text = "Total: " + score;
+            Debug.Log("Wrong answer!");
+            questionPanel.SetActive(false);
+            losePanel.SetActive(true);
+            loseText.gameObject.SetActive(true);
+            loseText.text = "Game Over!";
+            restartButton.gameObject.SetActive(true);
+            scoreTextFinal.gameObject.SetActive(true);
+            _gameManager.PauseGame();
         }
-
         questionPanel.SetActive(false);
-
         playerScript.ResumeMovement();
         enemyScript.ResumeMovement();
-
         GameManager.Instance.ResumeGame();
     }
 
@@ -199,5 +214,32 @@ public class QuizManager : MonoBehaviour
             loseText.text = "You Lose!";
         }
         Time.timeScale = 0f;
+    }
+
+    private void RestartGame()
+    {
+        Debug.Log("Restarting game...");
+        score = 0;
+        UpdateScore();
+        losePanel.SetActive(false);
+        loseText.gameObject.SetActive(false);
+        restartButton.gameObject.SetActive(false);
+        GameManager.Instance.RestartGame();
+        ShowStartPanel();
+    }
+    private void ShowStartPanel()
+    {
+        startPanel.SetActive(true);
+        questionPanel.SetActive(false);
+        losePanel.SetActive(false);
+        scoreText.gameObject.SetActive(false);
+    }
+    private void HideEnemy()
+    {
+        if (enemyScript != null)
+        {
+            Instantiate(smokePrefab, enemyScript.transform.position, Quaternion.identity);
+            enemyScript.gameObject.SetActive(false);
+        }
     }
 }
