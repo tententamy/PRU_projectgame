@@ -11,6 +11,10 @@ public class StartScreenManager : MonoBehaviour
     public GameObject startPanel;
     public Button startButton;
     public TMP_Text welcomeText;
+    public Button volumeButton; // Thêm nút âm lượng
+    public AudioSource audioSource; // Thêm AudioSource để quản lý âm thanh
+
+    private bool isMuted = false; // Biến lưu trạng thái âm thanh
 
     private void Awake()
     {
@@ -35,6 +39,7 @@ public class StartScreenManager : MonoBehaviour
         }
         ShowStartScreen();
         startButton.onClick.AddListener(OnStartButtonClicked);
+        volumeButton.onClick.AddListener(OnVolumeButtonClicked);
     }
 
     public void ShowStartScreen()
@@ -46,5 +51,17 @@ public class StartScreenManager : MonoBehaviour
     {
         startPanel.SetActive(false); // Ẩn panel bắt đầu khi nút bắt đầu được nhấn
         GameManager.Instance.StartGame();
+    }
+    private void OnVolumeButtonClicked()
+    {
+        isMuted = !isMuted; // Chuyển đổi trạng thái âm thanh
+        audioSource.mute = isMuted; // Tắt hoặc bật âm thanh
+        UpdateVolumeButtonText(); // Cập nhật văn bản nút âm lượng nếu cần
+    }
+
+    private void UpdateVolumeButtonText()
+    {
+        // Cập nhật văn bản trên nút âm lượng (nếu có)
+        volumeButton.GetComponentInChildren<TMP_Text>().text = isMuted ? "" : "";
     }
 }
