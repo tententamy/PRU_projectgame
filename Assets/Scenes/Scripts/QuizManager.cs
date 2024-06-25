@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class QuizManager : MonoBehaviour
 {
     private static QuizManager _instance;
-    private static GameManager _gameManager;
+    private GameManager _gameManager;
 
     public static QuizManager Instance
     {
@@ -26,7 +25,7 @@ public class QuizManager : MonoBehaviour
             return _instance;
         }
     }
-    public GameObject startPanel;
+
     public GameObject questionPanel;
     public TMP_Text questionText;
     public Button answerButton1;
@@ -37,21 +36,21 @@ public class QuizManager : MonoBehaviour
     public Button restartButton;
     public GameObject smokePrefab;
     public TMP_Text scoreTextFinal;
-    public List<QuizQuestion> questions; // Danh sách các câu hỏi
+    public GameObject newBackground;
+
+    private List<TriviaManager.Question> triviaQuestions = new List<TriviaManager.Question>();
 
     private Player playerScript;
     private Enemies enemyScript;
 
-    private int score = 0;
-
     private void Start()
     {
-        // Kiểm tra xem tất cả các thành phần UI đã được gán chưa
         if (questionPanel == null || questionText == null || answerButton1 == null || answerButton2 == null || scoreText == null || restartButton == null)
         {
             Debug.LogError("Some UI components are not assigned in QuizManager.");
             return;
         }
+
         if (losePanel != null)
             losePanel.SetActive(false);
 
@@ -60,72 +59,33 @@ public class QuizManager : MonoBehaviour
         restartButton.onClick.AddListener(RestartGame);
         scoreText.gameObject.SetActive(false);
         scoreTextFinal.gameObject.SetActive(false);
-        
-        // Hiển thị điểm số ban đầu
-        UpdateScore();
 
-        // Khởi tạo danh sách câu hỏi
-        questions = new List<QuizQuestion>
- {
-     new QuizQuestion("What is the capital of France?", new string[] { "Paris", "London" }, 0),
-     new QuizQuestion("What is 2 + 2?", new string[] { "3", "4" }, 1),
-     new QuizQuestion("What color is the sky?", new string[] { "Blue", "Green" }, 0),
-     new QuizQuestion("What is the largest planet in our solar system?", new string[] { "Earth", "Jupiter" }, 1),
-     new QuizQuestion("Who wrote 'Hamlet'?", new string[] { "Shakespeare", "Tolkien" }, 0),
-     new QuizQuestion("What is the boiling point of water?", new string[] { "100°C", "50°C" }, 0),
-     new QuizQuestion("What is the chemical symbol for water?", new string[] { "H2O", "O2" }, 0),
-     new QuizQuestion("How many continents are there?", new string[] { "5", "7" }, 1),
-     new QuizQuestion("What is the currency of Japan?", new string[] { "Yen", "Dollar" }, 0),
-     new QuizQuestion("Who painted the Mona Lisa?", new string[] { "Da Vinci", "Van Gogh" }, 0),
-     new QuizQuestion("Which element is represented by the symbol 'O'?", new string[] { "Oxygen", "Gold" }, 0),
-     new QuizQuestion("In which year did the Titanic sink?", new string[] { "1912", "1905" }, 0),
-     new QuizQuestion("Who discovered penicillin?", new string[] { "Alexander Fleming", "Marie Curie" }, 0),
-     new QuizQuestion("What is the speed of light?", new string[] { "300,000 km/s", "150,000 km/s" }, 0),
-     new QuizQuestion("What is the capital of Australia?", new string[] { "Sydney", "Canberra" }, 1),
-     new QuizQuestion("What is the smallest country in the world?", new string[] { "Vatican City", "Monaco" }, 0),
-     new QuizQuestion("Who wrote '1984'?", new string[] { "George Orwell", "Aldous Huxley" }, 0),
-     new QuizQuestion("What is the hardest natural substance on Earth?", new string[] { "Diamond", "Gold" }, 0),
-     new QuizQuestion("Which planet is known as the Red Planet?", new string[] { "Mars", "Venus" }, 0),
-     new QuizQuestion("What is the main ingredient in sushi?", new string[] { "Rice", "Noodles" }, 0),
-     new QuizQuestion("What is 7 + 5?", new string[] { "12", "11" }, 0),
-     new QuizQuestion("What is 12 + 8?", new string[] { "20", "19" }, 0),
-     new QuizQuestion("What is 9 + 6?", new string[] { "15", "16" }, 0),
-     new QuizQuestion("What is 15 + 4?", new string[] { "19", "18" }, 0),
-     new QuizQuestion("What is 23 + 7?", new string[] { "30", "31" }, 0),
-     new QuizQuestion("What is 18 + 5?", new string[] { "23", "22" }, 0),
-     new QuizQuestion("What is 11 + 9?", new string[] { "20", "21" }, 0),
-     new QuizQuestion("What is 14 + 13?", new string[] { "27", "26" }, 0),
-     new QuizQuestion("What is 29 + 10?", new string[] { "39", "38" }, 0),
-     new QuizQuestion("What is 6 + 7?", new string[] { "13", "14" }, 0),
-     new QuizQuestion("What is 15 - 7?", new string[] { "8", "9" }, 0),
-     new QuizQuestion("What is 20 - 8?", new string[] { "12", "13" }, 0),
-     new QuizQuestion("What is 14 - 5?", new string[] { "9", "8" }, 0),
-     new QuizQuestion("What is 18 - 9?", new string[] { "9", "8" }, 0),
-     new QuizQuestion("What is 25 - 12?", new string[] { "13", "14" }, 0),
-     new QuizQuestion("What is 30 - 15?", new string[] { "15", "14" }, 0),
-     new QuizQuestion("What is 22 - 7?", new string[] { "15", "14" }, 0),
-     new QuizQuestion("What is 19 - 10?", new string[] { "9", "8" }, 0),
-     new QuizQuestion("What is 17 - 6?", new string[] { "11", "10" }, 0),
-     new QuizQuestion("What is 9 - 4?", new string[] { "5", "4" }, 0),
-     new QuizQuestion("What is 3 x 4?", new string[] { "12", "11" }, 0),
-     new QuizQuestion("What is 5 x 6?", new string[] { "30", "31" }, 0),
-     new QuizQuestion("What is 7 x 8?", new string[] { "56", "55" }, 0),
-     new QuizQuestion("What is 2 x 9?", new string[] { "18", "19" }, 0),
-     new QuizQuestion("What is 4 x 5?", new string[] { "20", "21" }, 0),
-     new QuizQuestion("What is 6 x 7?", new string[] { "42", "41" }, 0),
-     new QuizQuestion("What is 8 x 3?", new string[] { "24", "23" }, 0),
-     new QuizQuestion("What is 9 x 2?", new string[] { "18", "17" }, 0),
-     new QuizQuestion("What is 5 x 9?", new string[] { "45", "46" }, 0),
-     new QuizQuestion("What is 7 x 6?", new string[] { "42", "43" }, 0),
-     new QuizQuestion("What is 16 ÷ 4?", new string[] { "4", "5" }, 0),
-     new QuizQuestion("What is 18 ÷ 6?", new string[] { "3", "2" }, 0),
-     new QuizQuestion("What is 20 ÷ 5?", new string[] { "4", "3" }, 0),
-     new QuizQuestion("What is 24 ÷ 8?", new string[] { "3", "4" }, 0),
-     new QuizQuestion("What is 15 ÷ 3?", new string[] { "5", "6" }, 0),
-     new QuizQuestion("What is 12 ÷ 4?", new string[] { "3", "4" }, 0),
-     new QuizQuestion("What is 28 ÷ 7?", new string[] { "4", "5" }, 0),
-     new QuizQuestion("What is 30 ÷ 6?", new string[] { "5", "6" }, 0),
- };
+        // Ensure we have the latest trivia questions
+        FetchTriviaQuestions();
+        _gameManager = GameManager.Instance;
+        if (_gameManager == null)
+        {
+            Debug.LogError("GameManager.Instance is not initialized or GameManager is not found in the scene.");
+        }
+    }
+
+    public void FetchTriviaQuestions()
+    {
+        TriviaManager triviaManager = TriviaManager.Instance as TriviaManager;
+
+        if (triviaManager != null)
+        {
+            triviaQuestions = triviaManager.TriviaQuestions;
+            ShuffleQuestions();
+        }
+        else
+        {
+            Debug.LogError("TriviaManager is not found or Instance is not of type TriviaManager.");
+        }
+    }
+    public void SetTriviaQuestions(List<TriviaManager.Question> questions)
+    {
+        triviaQuestions = questions;
     }
 
     public void ShowQuestion(Player player, Enemies enemy)
@@ -136,17 +96,39 @@ public class QuizManager : MonoBehaviour
             return;
         }
 
+        if (triviaQuestions == null || triviaQuestions.Count == 0)
+        {
+            Debug.LogWarning("No questions available.");
+            return;
+        }
+
+        DisplayQuestion(player, enemy);
+    }
+
+    private void DisplayQuestion(Player player, Enemies enemy)
+    {
+        if (questionPanel == null || questionText == null || answerButton1 == null || answerButton2 == null || scoreText == null)
+        {
+            Debug.LogError("Some UI components are not assigned in QuizManager.");
+            return;
+        }
+
+        if (triviaQuestions.Count == 0)
+        {
+            Debug.LogWarning("No questions available.");
+            return;
+        }
+
         playerScript = player;
         enemyScript = enemy;
-
+        
         playerScript.StopMovement();
         enemyScript.StopMovement();
 
-        // Chọn một câu hỏi ngẫu nhiên
-        int questionIndex = Random.Range(0, questions.Count);
-        QuizQuestion currentQuestion = questions[questionIndex];
+        TriviaManager.Question currentQuestion = triviaQuestions[0];
+        triviaQuestions.RemoveAt(0);
 
-        questionText.text = currentQuestion.question;
+        questionText.text = currentQuestion.questionText;
 
         TMP_Text answerText1 = answerButton1.GetComponentInChildren<TMP_Text>();
         TMP_Text answerText2 = answerButton2.GetComponentInChildren<TMP_Text>();
@@ -157,35 +139,41 @@ public class QuizManager : MonoBehaviour
             return;
         }
 
-        answerText1.text = currentQuestion.answers[0];
-        answerText2.text = currentQuestion.answers[1];
+        answerText1.text = "True";
+        answerText2.text = "False";
 
         answerButton1.onClick.RemoveAllListeners();
         answerButton2.onClick.RemoveAllListeners();
 
-        answerButton1.onClick.AddListener(() => OnAnswerSelected(0, currentQuestion.correctAnswerIndex));
-        answerButton2.onClick.AddListener(() => OnAnswerSelected(1, currentQuestion.correctAnswerIndex));
+        answerButton1.onClick.AddListener(() => OnAnswerSelected(true, currentQuestion.isTrue));
+        answerButton2.onClick.AddListener(() => OnAnswerSelected(false, currentQuestion.isTrue));
 
         questionPanel.SetActive(true);
     }
 
-    private void OnAnswerSelected(int index, int correctAnswerIndex)
+    private void OnAnswerSelected(bool selectedAnswer, bool correctAnswer)
     {
-        _gameManager = FindObjectOfType<GameManager>();
-        Debug.Log("Answer selected: " + index);
+        _gameManager = GameManager.Instance;
+        Debug.Log("Answer selected: " + selectedAnswer);
 
-        if (index == correctAnswerIndex)
+        if (selectedAnswer == correctAnswer)
         {
             Debug.Log("Correct answer!");
-            score += 1;
-            UpdateScore();
+            _gameManager.AddScore(1);
             HideEnemy();
             playerScript.TriggerAttackAnimation();
             scoreText.gameObject.SetActive(true);
+            questionPanel.SetActive(false);
+            scoreText.text = "Score: " + _gameManager.score;
+            scoreText.gameObject.SetActive(true);
+            if (_gameManager.score == 1)
+            {
+                ChangeBackground();
+            }
         }
         else
         {
-            scoreTextFinal.text = "Total: " + score;
+            scoreTextFinal.text = "Total: " + _gameManager.score;
             Debug.Log("Wrong answer!");
             questionPanel.SetActive(false);
             losePanel.SetActive(true);
@@ -193,47 +181,95 @@ public class QuizManager : MonoBehaviour
             loseText.text = "Game Over!";
             restartButton.gameObject.SetActive(true);
             scoreTextFinal.gameObject.SetActive(true);
+            _gameManager.score = 0;
             _gameManager.PauseGame();
+            
         }
-        questionPanel.SetActive(false);
+
         playerScript.ResumeMovement();
         enemyScript.ResumeMovement();
-        GameManager.Instance.ResumeGame();
-    }
+        _gameManager.ResumeGame();
 
-    private void UpdateScore()
-    {
-        scoreText.text = "Score: " + score;
-    }
-
-    private void ShowLoseMessage()
-    {
-        if (losePanel != null && loseText != null)
+        if (triviaQuestions.Count == 0)
         {
-            losePanel.SetActive(true);
-            loseText.text = "You Lose!";
+            Debug.Log("No questions left, fetching more questions.");
         }
-        Time.timeScale = 0f;
+        else
+        {
+            Debug.Log($"Questions remaining: {triviaQuestions.Count}");
+        }
     }
 
     private void RestartGame()
     {
-        Debug.Log("Restarting game...");
-        score = 0;
-        UpdateScore();
-        losePanel.SetActive(false);
-        loseText.gameObject.SetActive(false);
-        restartButton.gameObject.SetActive(false);
-        GameManager.Instance.RestartGame();
-        ShowStartPanel();
+        if (_gameManager != null)
+        {
+            _gameManager.ResetState();
+            _gameManager.RestartGame();
+            _gameManager.score = 0;
+
+            scoreText.text = "Score: " + _gameManager.score;
+            scoreTextFinal.text = "Total: " + _gameManager.score;
+
+            FetchTriviaQuestions();
+            ShuffleQuestions();
+
+            // Kiểm tra và gọi DisplayQuestion chỉ khi các đối tượng được gán
+            if (playerScript != null && enemyScript != null)
+            {
+                DisplayQuestion(playerScript, enemyScript);
+            }
+            else
+            {
+                Debug.LogError("playerScript or enemyScript is null. Cannot display question.");
+            }
+
+            if (triviaQuestions.Count > 0)
+            {
+                DisplayQuestion(playerScript, enemyScript);
+            }
+            else
+            {
+                Debug.LogWarning("No questions available after shuffle.");
+            }
+        }
+        else
+        {
+            Debug.LogError("_gameManager is not initialized!");
+        }
     }
-    private void ShowStartPanel()
+    public void ResetScore()
     {
-        startPanel.SetActive(true);
-        questionPanel.SetActive(false);
-        losePanel.SetActive(false);
-        scoreText.gameObject.SetActive(false);
+        if (_gameManager != null)
+        {
+            _gameManager.score = 0;
+            scoreText.text = "Score: " + _gameManager.score;
+            scoreTextFinal.text = "Total: " + _gameManager.score;
+        }
     }
+    private void ChangeBackground()
+    {
+        if (newBackground != null)
+        {
+            GameObject currentBackground = GameObject.Find("Background");
+            if (currentBackground != null)
+            {
+                currentBackground.SetActive(false);
+            }
+            newBackground.SetActive(true);
+        }
+    }
+    public void ShuffleQuestions()
+    {
+        for (int i = 0; i < triviaQuestions.Count; i++)
+        {
+            TriviaManager.Question temp = triviaQuestions[i];
+            int randomIndex = Random.Range(i, triviaQuestions.Count);
+            triviaQuestions[i] = triviaQuestions[randomIndex];
+            triviaQuestions[randomIndex] = temp;
+        }
+    }
+
     private void HideEnemy()
     {
         if (enemyScript != null)
